@@ -1,1 +1,3 @@
-# Big-Data-Final-Project
+# Project: Analysing the US weather data of 2022 from world data.
+
+### Description: This project processes world's weather data of 2022 to get the US data and then analysing US data to get information about weather stations particularly of Texas, New York and Vermont state. The project involves analysing of these weather stations to give insights about temperature range throughout the year. We have 13476 world stations in the form of CSVs and after data processing, we get 2900 CSVs of 2900 stations. In this project, CSV reader module is used to process the big data as this module reads the data line by line which makes this process time and memory efficient.
