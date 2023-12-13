@@ -1,6 +1,6 @@
-# Project: Analysing the US weather data of 2022 from world data.
+# Project: Analysing the US Weather Data of 2022 from World Data.
 
-### Description: This project processes world's weather data of 2022 to get the US data and then analysing US data to get information about weather stations particularly of Texas, New York and Vermont state. The project involves analysing of these weather stations to give insights about temperature range throughout the year. We have 13476 world stations in the form of CSVs and after data processing, we get 2900 CSVs of 2900 stations. In this project, CSV reader module is used to process the big data as this module reads the data line by line which makes this process time and memory efficient.
+### Description: This project processes world's weather data of 2022 to get the US data and then analysing US data to get information about weather stations particularly of Texas, New York state. The project involves analysing these weather stations to give insights about temperature range throughout the year. We have 13476 world stations in the form of CSVs and after data processing, we get 2900 CSVs of 2900 stations in the US. In this project, CSV reader module is used to process the big data as this module reads the data line by line which makes this process time and memory efficient.
 
 ### Technologies Used
 - Python
@@ -18,7 +18,7 @@
 - Python code for data cleaning, merging, and analysis
 - Visualizations and graphs to show insights and patterns
 - Interactive map highlighting for temperature visualization
-- Final report summarizing insights of New York, Texas and Vermont stations.
+- Final report summarizing insights of New York and Texas stations.
 
 ### Meta Data 
 | Columns  | Description | 
@@ -40,7 +40,32 @@
 | Dew  | Moisture formed near station|
 | SLP  | Sea Level Pressure |
 
+### Filtered the US station data from the world data using shapely library.
 
+```
+import glob, csv, time
+from shapely.geometry import Polygon, Point
+n=0
+US=[]
+polygon = Polygon([(48.55722036991696,-124.77539241313934),(47.141784234243886,-68.17382991313934),(24.50297838543698,-81.00586116313934),(34.139846501570005,-120.64453303813934),(48.55722036991696,-124.77539241313934)])
+for files in glob.glob('2022/*csv'):
+    
+    n+=1
+    if n>7374:
+        with open(files,'r') as f:
+            data = csv.reader(f)
+            for i in data:
+                point = Point(i[3],i[4])
+                if polygon.contains(point):
+                    US.append(i)
+
+with open("US_Data.csv", 'w') as csvfile:    
+    csvwriter = csv.writer(csvfile) 
+    csvwriter.writerows(US_Final)
+```
+- Imported Glob library to iterate over a folder which has 13474 CSV's
+- Imported Shapely library to select a Polygon of US Latitude and Longitude as shown in the code
+- Appended the US data based on their Latitude and Longitude, If the point is in Polygon then write the row in the new CSV using csv writer module
 ### Getting New York state data from the US data
 ```
 import csv
@@ -78,7 +103,7 @@ with open('NY.csv','r') as f:
         n+=1
 stations
 ```
-##### We have 39 Stations in the US as follow
+#### We have 39 Stations in New York as follow
 
 | STATION    |  NAME
 -----------|--------------------------------------------|
@@ -122,8 +147,8 @@ stations
 74499404741 | SCHENECTADY, NY US
 ------------
 
-#### Checked weather location of each station is same or not
-##### This code returns a dictionary LatLong which contains Id's of stations whose location is changed. After execution this code returns an empty dictionary which states that no station changed its location in 2022. 
+### Checked the mobility of the stations
+#### This code returns a dictionary LatLong which contains Id's of stations whose location is changed. After execution this code returns an empty dictionary which states that no station changed its location in 2022. 
 #### This gives us an insight about the mobility of each station.
 
 ```
@@ -142,7 +167,8 @@ with open('Vermont.csv','r') as f:
             n+=1
 Location
 ```
-#### Created a function temperature for better aesthetics and flexibility of the code. This function takes a file as an atttribute and returns a dictionary with station ID's and average tempereature of 2022.
+
+### Created a function temperature for better aesthetics and flexibility of the code. This function takes a file as an atttribute and returns a dictionary with station ID's and average tempereature of 2022.
 ##### The Code:
 ```
 def temperature(file):
@@ -210,8 +236,8 @@ temp=temperature('NY.csv')
 |SCHENECTADY, NY US                              | 11.4279
 -----------------------------------------------  --------
 
-#### Visualized the temperature range of all the stations.
-#### This Bar chart shows temperature range in New York State.
+### Visualized the temperature range of all the stations.
+### This Bar chart shows temperature range in New York State.
 
 ![Bar](https://github.com/varadpawar1/Big-Data-Final-Project/assets/102013045/7c15b435-267d-468d-8c67-91f39a681706)
 
@@ -221,3 +247,68 @@ temp=temperature('NY.csv')
 #### Lowest Avg Temperature
 |SARANAC LAKE ADIRONDACK REGIONAL AIRPORT, NY US |  4.62823
 |-------|-------
+
+### Spatial visualization using Folium library
+```
+import folium
+m =folium.Map(location=[30,-98],zoom_start=6)
+for i in temp:
+    if temp[i]<10:
+        folium.Marker(LatLong[i], popup=[stations[i],temp[i]], icon=folium.Icon(color='green')).add_to(m)
+    if temp[i]>=10 and temp[i]<15:
+        folium.Marker(LatLong[i], popup=[stations[i],temp[i]], icon=folium.Icon(color='pink')).add_to(m)
+    if temp[i]>=15:
+        folium.Marker(LatLong[i], popup=[stations[i],temp[i]], icon=folium.Icon(color='red')).add_to(m)
+m
+```
+#### This Map shows 39 weather stations of New York and their temperature range. 
+- Green station shows temperature less than 10 degree celsius.
+- Pink shows temperature between 10-15 degree celsius.
+<img width="865" alt="NY" src="https://github.com/varadpawar1/Big-Data-Final-Project/assets/102013045/67acda5d-511c-4c7c-8a52-7d363a38dd7e">
+
+### Compared previous map with Texas weather map
+- Green station shows temperature less than 15 degree celsius.
+- Pink shows temperature between 15-20 degree celsius.
+- Red shows temperature greater than 20 degree celsius
+<img width="890" alt="Texas" src="https://github.com/varadpawar1/Big-Data-Final-Project/assets/102013045/4087136e-d2a3-4c9a-8014-b28aeac51429">
+
+
+### Created function definition for monthly temperature range of each station.
+### This function takes the NY.csv as an attribute and returns a dictionary monthly_temperature
+
+```
+def monthwise_temp(file):
+    mt={}
+    with open(file) as f:
+        n=0
+        data= csv.reader(f)
+        for i in data:
+            if len(i)>1 and 'TMP' not in i[13][:4] and -30<int(i[13][:4])<50:
+                for j in range(1,13):
+                    if int(i[1][5:7])==j:
+                        if i[0]+'_'+str(j) not in mt:
+                            n=1
+                            mt[i[0]+'_'+str(j)]=int(i[13][:4])
+                        else:
+                            n+=1
+                            mt[i[0]+'_'+str(j)]=((mt[i[0]+'_'+str(j)]*(n-1))+int(i[13][:4]))/n
+    return mt
+```
+### Visualized monthly temperature trend of Massena Weather Station New York.
+![Massena](https://github.com/varadpawar1/Big-Data-Final-Project/assets/102013045/a29e50bf-d97b-4d90-8bd4-b1017bb8b0de)
+
+### Compared this with Hereford Muncipal Airport Weather Station Texas
+![Texas station](https://github.com/varadpawar1/Big-Data-Final-Project/assets/102013045/15ba7db4-97f3-4bca-80b6-6013ebcccb09)
+
+## Conclusion: From the analysis, we conclude that
+- Avg New York Temp:  9.044
+- Avg Texas Temp:  19.215055498818458
+- Mobility of both the states is same
+- No station in New York having temperature greater than 15 degree celsius
+- 42 stations in Texas having Avg temperature greater than 20 degree celsius
+- 6 stations in Texas having Avg temperature less than 15 degree celsius
+- All the stations in both the state were active throghout the year 2022
+
+
+
+
